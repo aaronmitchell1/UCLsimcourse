@@ -52,20 +52,78 @@ tsepois <- tpois$stderr
 tstatnorm <- tnorm$estimate[1] - tnorm$estimate[2]
 tsenorm <- tnorm$stderr
 
+#Function for 1 iteration
+
+sim <- function(nobs1, nobs2, lambda1, lambda2)
+{
+  df1pois <- data.frame(id = 1:nobs1,
+                        dat = rpois(nobs1, lambda1))
+  
+  df2pois <- data.frame(id = 1:nobs2,
+                        dat = rpois(nobs2, lambda2))
+  
+  df1pois$grp <- 1
+  df2pois$grp <- 2
+  
+  datpois <- rbind(df1pois, df2pois)
+  datpois$id <- 1:nobs1+nobs2
+  datpois$grp <- as.factor(datpois$grp)
+  
+  tpois <- t.test(dat ~ grp, data=datpois, var.equal=TRUE)
+  tstatpois <- tpois$estimate[1] - tpois$estimate[2]
+  tsepois <- tpois$stderr
+  
+  res <- data.frame(tstatpois, tsepois)
+}
+
+#Function for loop
+
+simloop <- function(iter, nobs1, nobs2, lambda1, lambda2)
+           {
+  
+  df1pois <- data.frame(id = 1:nobs1,
+                        dat = rpois(nobs1, lambda1))
+  
+  df2pois <- data.frame(id = 1:nobs2,
+                        dat = rpois(nobs2, lambda2))
+  
+  df1pois$grp <- 1
+  df2pois$grp <- 2
+  
+  datpois <- rbind(df1pois, df2pois)
+  datpois$id <- 1:nobs1+nobs2
+  datpois$grp <- as.factor(datpois$grp)
+  
+  tpois <- t.test(dat ~ grp, data=datpois, var.equal=TRUE)
+  tstatpois <- tpois$estimate[1] - tpois$estimate[2]
+  tsepois <- tpois$stderr
+  
+  res <- data.frame(i = iter, diff = tstatpois, se = tsepois) 
+  
+  return(res)
+}
+
+
+
+#Loop
+iter=500, nobs1=5000, nobs2=5000, lambda1=1, lambda2=1   
+
+results <- vector(mode = "list", length = iter)
+
+for (i in 1:iter) {
+  
+  results[[i]] <- simloop(iter=iter, nobs1=nobs1, nobs2=nobs2, 
+                            lambda1=lambda1, lambda2=lambda2)
+
+}
+  
 #Do we want to vary the group sizes?
 
 #Function for loop, 1 DGM
 
-iter
+
 dgm <- 1:2
 
-sim <- function(iter, nobs1, nobs2, lambda)
-              {
-  
-  df1pois <- data.frame(id = 1:nobs1,
-                        dat = rpois(5000, 1))
-  
-  df2pois <- data.frame(id = 1:5000,
-                        dat = rpois(5000, 1))
+
 
 #Make a matrix to store results
