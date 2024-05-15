@@ -103,8 +103,6 @@ simloop <- function(iter, nobs1, nobs2, lambda1, lambda2)
   return(res)
 }
 
-
-
 #Loop
 iter=500, nobs1=5000, nobs2=5000, lambda1=1, lambda2=1   
 
@@ -116,14 +114,17 @@ for (i in 1:iter) {
                             lambda1=lambda1, lambda2=lambda2)
 
 }
+
+#Diagnostics
+#Mean for data generated for group 1 and 2
+meang1 <- mean(datpois$dat[datpois$grp=="1"])
+meang2 <- mean(datpois$dat[datpois$grp=="2"])
+
+#Correlation between data in groups 1 and 2
+cor1 <- cor(datpois$dat[datpois$grp=="1"], datpois$dat[datpois$grp=="2"])
   
 #Do we want to vary the group sizes?
 
 #Function for loop, 1 DGM
 
-
 dgm <- 1:2
-
-
-
-#Make a matrix to store results
