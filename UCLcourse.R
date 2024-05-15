@@ -1,7 +1,9 @@
+library(foreach)
+
 #Set seed
 set.seed(5000)
 
-#Generate data for 2 groups, sample size 5000 each, 
+#Example: generate data for 2 groups, sample size 5000 each, 
 #with lambda of 1 for both groups (equal variances)
 
 df1pois <- data.frame(id = 1:5000,
@@ -33,13 +35,14 @@ df2pois$grp <- 2
 df1norm$grp <- 1
 df2norm$grp <- 2
 
+datpois$grp <- as.factor(datpois$grp)
+datnorm$grp <- as.factor(datnorm$grp)
+
 datpois <- rbind(df1pois, df2pois)
 datpois$id <- 1:10000
-datpois$grp <- as.factor(datpois$grp)
 
 datnorm <- rbind(df1norm, df2norm)
 datnorm$id <- 1:10000
-datnorm$grp <- as.factor(datnorm$grp)
 
 #Run a t-test on Poisson data assuming equal variances
 tpois <- t.test(dat ~ grp, data=datpois, var.equal=TRUE)
@@ -52,7 +55,7 @@ tsepois <- tpois$stderr
 tstatnorm <- tnorm$estimate[1] - tnorm$estimate[2]
 tsenorm <- tnorm$stderr
 
-#Function for 1 iteration
+#Function for 1 iteration - possibly do smaller nobs
 
 sim <- function(nobs1, nobs2, lambda1, lambda2)
 {
@@ -98,33 +101,46 @@ simloop <- function(iter, nobs1, nobs2, lambda1, lambda2)
   tstatpois <- tpois$estimate[1] - tpois$estimate[2]
   tsepois <- tpois$stderr
   
-  res <- data.frame(i = iter, diff = tstatpois, se = tsepois) 
+  res <- data.frame(i = iter, diff = tstatpois, se = tsepois)
   
   return(res)
 }
 
 #Loop
-iter=500, nobs1=5000, nobs2=5000, lambda1=1, lambda2=1   
+
+iter=500, nobs1=250, nobs2=250, lambda1=1, lambda2=1
 
 results <- vector(mode = "list", length = iter)
+
+#Diagnostics?
+meang1 <- matrix(0, iter)
+meang2 <- matrix(0, iter)
+cor1 <- matrix(0, iter)
 
 for (i in 1:iter) {
   
   results[[i]] <- simloop(iter=iter, nobs1=nobs1, nobs2=nobs2, 
-                            lambda1=lambda1, lambda2=lambda2)
-
-}
-
-#Diagnostics
-#Mean for data generated for group 1 and 2
-meang1 <- mean(datpois$dat[datpois$grp=="1"])
-meang2 <- mean(datpois$dat[datpois$grp=="2"])
-
-#Correlation between data in groups 1 and 2
-cor1 <- cor(datpois$dat[datpois$grp=="1"], datpois$dat[datpois$grp=="2"])
+                          lambda1=lambda1, lambda2=lambda2)
+  meang1[i] <- mean(datpois$dat[datpois$grp=="1"])
+  meang2[i] <- mean(datpois$dat[datpois$grp=="2"])
+  cor1[i] <- cor(datpois$dat[datpois$grp=="1"], datpois$dat[datpois$grp=="2"])
   
-#Do we want to vary the group sizes?
+  }
 
-#Function for loop, 1 DGM
+#Do we want to vary the group sizes? Can do this with the function we made.
 
-dgm <- 1:2
+#2 DGMs
+#Use foreach
+
+#Where do we specify mean and SD?
+
+function(mean1, mean2, sd1, sd2)
+
+foreach(i = 1) %do% {
+  
+  df1norm <- data.frame(id = 1:nobs1,
+                        dat = rnorm(nobs1, mean1, sd1))
+  
+  df2norm <- data.frame(id = 1:nobs2,
+                        dat = rnorm(nobs2, mean2, sd2))
+}
